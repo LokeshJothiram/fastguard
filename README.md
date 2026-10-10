@@ -155,8 +155,13 @@ guard = PIIGuard(unmask_output=False)
 | Heavy Transformer NER | 50 – 200 ms | 1 – 4 GB | Requires custom wrappers |
 | Cloud Security APIs | 100 – 300 ms | External network call | High network overhead |
 
+## Contributing
+
+We welcome community contributions! Please read our [Contributing Guide](CONTRIBUTING.md) to get started with local development, running tests, and opening Pull Requests.
+
 ---
 
 ## License
 
 MIT License © 2026
+
