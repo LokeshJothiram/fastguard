@@ -6,6 +6,19 @@
 
 ---
 
+## 🖥️ Interactive Web Demo
+
+Test real-time PII sanitization and reversible stream unmasking in your browser:
+
+![fastguard Live Sandbox](assets/sandbox_demo.png)
+
+```bash
+# Launch the local visual sandbox
+python demo.py
+```
+
+---
+
 ## Key Features
 
 - **⚡ Sub-Millisecond Speed:** Processing latencies under 100 microseconds ($\mu\text{s}$).
