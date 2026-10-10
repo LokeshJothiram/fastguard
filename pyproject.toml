@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fastguard"
-version = "0.2.0"
+version = "1.0.0"
 description = "Sub-millisecond, streaming-native PII guardrail & reversible vault for LLMs"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,9 +12,30 @@ license = { text = "MIT" }
 authors = [
     { name = "Lokesh Jothiram", email = "lokesh.jothiram.contact@gmail.com" }
 ]
+keywords = ["pii", "privacy", "llm", "guardrail", "redaction", "security", "streaming", "nlp"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Filters",
+    "Typing :: Typed",
+]
 dependencies = [
     "phonenumbers>=8.13.0"
 ]
+
+[project.urls]
+Homepage = "https://github.com/LokeshJothiram/fastguard"
+Repository = "https://github.com/LokeshJothiram/fastguard"
+"Bug Tracker" = "https://github.com/LokeshJothiram/fastguard/issues"
+Changelog = "https://github.com/LokeshJothiram/fastguard/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 nlp = [
@@ -28,3 +49,8 @@ dev = [
     "build",
     "twine"
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fastguard*"]
+exclude = ["tests*", "*.egg-info"]

@@ -1,4 +1,5 @@
 import re
+import threading
 from typing import Set, Optional
 from fastguard.pii.checksums import (
     validate_luhn, 
@@ -31,11 +32,13 @@ class PIIVault:
     }
 
     def __init__(self, whitelist: Optional[Set[str]] = None):
-        self.forward_map = {}
-        self.reverse_map = {}
-        self.counters = {}
+        self.forward_map: dict = {}
+        self.reverse_map: dict = {}
+        self.counters: dict = {}
         # Default safe terms that should never be masked
-        self.whitelist = set(whitelist) if whitelist else {"localhost", "127.0.0.1", "0.0.0.0"}
+        self.whitelist: Set[str] = set(whitelist) if whitelist else {"localhost", "127.0.0.1", "0.0.0.0"}
+        # Thread-safety lock for concurrent request environments (FastAPI, Django, etc.)
+        self._lock = threading.RLock()
 
     def _get_placeholder(self, entity_type: str) -> str:
         self.counters[entity_type] = self.counters.get(entity_type, 0) + 1
@@ -43,28 +46,30 @@ class PIIVault:
 
     def redact(self, text: str) -> str:
         redacted = text
-        for entity_type, (pattern, validator) in self.PATTERNS.items():
-            for match in pattern.finditer(text):
-                val = match.group(0)
-                
-                # Skip whitelisted values
-                if val.lower() in self.whitelist:
-                    continue
-                
-                # Run validator if present
-                if validator and not validator(val):
-                    continue
+        with self._lock:
+            for entity_type, (pattern, validator) in self.PATTERNS.items():
+                for match in pattern.finditer(text):
+                    val = match.group(0)
+                    
+                    # Skip whitelisted values
+                    if val.lower() in self.whitelist:
+                        continue
+                    
+                    # Run validator if present
+                    if validator and not validator(val):
+                        continue
 
-                if val not in self.forward_map:
-                    placeholder = self._get_placeholder(entity_type)
-                    self.forward_map[val] = placeholder
-                    self.reverse_map[placeholder] = val
-                
-                redacted = redacted.replace(val, self.forward_map[val])
+                    if val not in self.forward_map:
+                        placeholder = self._get_placeholder(entity_type)
+                        self.forward_map[val] = placeholder
+                        self.reverse_map[placeholder] = val
+                    
+                    redacted = redacted.replace(val, self.forward_map[val])
         return redacted
 
     def unmask(self, text: str) -> str:
-        unmasked = text
-        for placeholder, val in self.reverse_map.items():
-            unmasked = unmasked.replace(placeholder, val)
+        with self._lock:
+            unmasked = text
+            for placeholder, val in self.reverse_map.items():
+                unmasked = unmasked.replace(placeholder, val)
         return unmasked

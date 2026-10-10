@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0] - 2026-10-10
+
+### Added
+- **Thread-safety**: `PIIVault` is now protected by `threading.RLock` — safe for concurrent FastAPI/Django/Gunicorn environments
+- **PyPI classifiers**: Added production-ready classifiers, keywords, and project URLs
+- **`SECURITY.md`**: Vulnerability reporting policy and security design documentation
+- **`demo` optional extra**: `pip install fastguard[demo]` to install Gradio for the visual sandbox
+- **IP address validation**: `validate_ip` ensures each octet is within 0–255 range (eliminates false positives like `999.999.999.999`)
+
+### Changed
+- Version bumped to **`1.0.0`** — package is production-stable
+- `PIIGuard` and `StreamingGuardrail` window sizes aligned to `25` with a 20-char safety tail
+- `demo.py` creates a **fresh `PIIGuard` per request** to prevent session state leakage
+- Author details updated to **Lokesh Jothiram** (`lokesh.jothiram.contact@gmail.com`)
+
+---
+
 ## [0.2.0] - 2026-10-10
 
 ### Added
