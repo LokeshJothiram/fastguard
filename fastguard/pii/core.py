@@ -3,7 +3,7 @@ from fastguard.pii.vault import PIIVault
 from fastguard.pii.stream import StreamingGuardrail
 
 class PIIGuard:
-    def __init__(self, window_size: int = 35, whitelist: Optional[Set[str]] = None):
+    def __init__(self, window_size: int = 25, whitelist: Optional[Set[str]] = None):
         self.vault = PIIVault(whitelist=whitelist)
         self.streamer = StreamingGuardrail(self.vault, window_size=window_size)
 

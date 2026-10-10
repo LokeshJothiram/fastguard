@@ -1,17 +1,19 @@
 import gradio as gr
 from fastguard import PIIGuard
 
-guard = PIIGuard(whitelist={"localhost", "127.0.0.1"})
+DEFAULT_WHITELIST = {"localhost", "127.0.0.1"}
 
 def process_prompt(user_text):
     if not user_text:
         return "", ""
+    # Fresh guard per request to prevent state leakage across sessions
+    guard = PIIGuard(whitelist=DEFAULT_WHITELIST)
     # 1. Sanitize input
     sanitized = guard.sanitize_prompt(user_text)
     
     # 2. Simulate stream unmasking
     tokens = [t + " " for t in sanitized.split()]
-    restored = "".join(list(guard.wrap_stream(tokens)))
+    restored = "".join(list(guard.wrap_stream(tokens))).strip()
     
     return sanitized, restored
 

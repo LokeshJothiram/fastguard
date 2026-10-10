@@ -4,7 +4,8 @@ from fastguard.pii.checksums import (
     validate_luhn, 
     validate_verhoeff, 
     validate_phone, 
-    validate_iban
+    validate_iban,
+    validate_ip
 )
 
 class PIIVault:
@@ -12,7 +13,7 @@ class PIIVault:
         # Network & Contact
         "EMAIL": (re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'), None),
         "PHONE": (re.compile(r'(?:\+\d{1,3}[-.\s]?|\b\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,9}\b'), validate_phone),
-        "IP_ADDRESS": (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), None),
+        "IP_ADDRESS": (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), validate_ip),
         
         # Financial & Banking
         "CREDIT_CARD": (re.compile(r'\b(?:\d[ -]*?){13,19}\b'), validate_luhn),
