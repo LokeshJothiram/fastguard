@@ -64,5 +64,38 @@ def test_multi_entity_streaming_restoration():
     
     assert "user@example.com" in result
     assert "+1 650 253 0000" in result
+    assert "user@example.com" in result
+    assert "+1 650 253 0000" in result
     assert "4532 0123 4567 8910" in result
+
+def test_redact_input_disabled():
+    guard = PIIGuard(redact_input=False)
+    prompt = "My secret email is secret@corp.com"
+    clean = guard.sanitize_prompt(prompt)
+    assert clean == prompt  # Untouched raw text
+
+def test_unmask_output_disabled():
+    guard = PIIGuard(unmask_output=False)
+    _ = guard.sanitize_prompt("My email is secret@corp.com")
+    
+    stream_input = ["Sent ", "to ", "[EMAIL_1]", "!"]
+    stream_output = "".join(list(guard.wrap_stream(stream_input)))
+    assert "[EMAIL_1]" in stream_output  # Retains placeholder
+    assert "secret@corp.com" not in stream_output
+
+def test_selective_enabled_entities():
+    # Only mask CREDIT_CARD, leave EMAIL untouched
+    guard = PIIGuard(enabled_entities={"CREDIT_CARD"})
+    prompt = "Email alice@test.com card 4532 0123 4567 8910"
+    clean = guard.sanitize_prompt(prompt)
+    assert "alice@test.com" in clean
+    assert "[CREDIT_CARD_1]" in clean
+
+def test_selective_disabled_entities():
+    # Disable PHONE, keep EMAIL
+    guard = PIIGuard(disabled_entities={"PHONE"})
+    prompt = "Call +1 650 253 0000 or email alice@test.com"
+    clean = guard.sanitize_prompt(prompt)
+    assert "+1 650 253 0000" in clean
+    assert "[EMAIL_1]" in clean
 

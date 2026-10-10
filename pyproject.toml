@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Sub-millisecond, streaming-native PII guardrail & reversible vault for LLMs"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
     { name = "Lokesh Jothiram", email = "lokesh.jothiram.contact@gmail.com" }
 ]
@@ -16,7 +16,6 @@ keywords = ["pii", "privacy", "llm", "guardrail", "redaction", "security", "stre
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -54,3 +53,7 @@ dev = [
 where = ["."]
 include = ["fastguard*"]
 exclude = ["tests*", "*.egg-info"]
+
+[tool.setuptools.package-data]
+fastguard = ["py.typed"]
+

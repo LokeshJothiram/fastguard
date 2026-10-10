@@ -1,5 +1,7 @@
 from fastguard.pii.core import PIIGuard
 from fastguard.pii.vault import PIIVault
+from fastguard.pii.stream import StreamingGuardrail
 
 __version__ = "1.0.0"
-__all__ = ["PIIGuard", "PIIVault"]
+__all__ = ["PIIGuard", "PIIVault", "StreamingGuardrail"]
+

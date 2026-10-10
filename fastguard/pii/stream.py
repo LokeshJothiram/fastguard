@@ -5,11 +5,17 @@ from fastguard.pii.vault import PIIVault
 class StreamingGuardrail:
     """Sliding-window buffer engine for real-time LLM token stream unmasking."""
     
-    def __init__(self, vault: PIIVault, window_size: int = 25):
+    def __init__(self, vault: PIIVault, window_size: int = 25, enabled: bool = True):
         self.vault = vault
         self.window_size = window_size
+        self.enabled = enabled
 
     def process_stream(self, token_stream: Iterable[str]) -> Generator[str, None, None]:
+        if not self.enabled:
+            for token in token_stream:
+                yield token
+            return
+
         buffer = ""
         for token in token_stream:
             buffer += token

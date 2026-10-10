@@ -31,7 +31,12 @@ class PIIVault:
         "UK_NINO": (re.compile(r'\b[A-Z]{2}\d{6}[A-D]\b'), None),
     }
 
-    def __init__(self, whitelist: Optional[Set[str]] = None):
+    def __init__(
+        self, 
+        whitelist: Optional[Set[str]] = None,
+        enabled_entities: Optional[Set[str]] = None,
+        disabled_entities: Optional[Set[str]] = None
+    ):
         self.forward_map: dict = {}
         self.reverse_map: dict = {}
         self.counters: dict = {}
@@ -39,6 +44,16 @@ class PIIVault:
         self.whitelist: Set[str] = set(whitelist) if whitelist else {"localhost", "127.0.0.1", "0.0.0.0"}
         # Thread-safety lock for concurrent request environments (FastAPI, Django, etc.)
         self._lock = threading.RLock()
+        
+        # Filter active pattern detectors
+        active = dict(self.PATTERNS)
+        if enabled_entities is not None:
+            enabled_set = {e.upper() for e in enabled_entities}
+            active = {k: v for k, v in active.items() if k in enabled_set}
+        if disabled_entities is not None:
+            disabled_set = {d.upper() for d in disabled_entities}
+            active = {k: v for k, v in active.items() if k not in disabled_set}
+        self.active_patterns = active
 
     def _get_placeholder(self, entity_type: str) -> str:
         self.counters[entity_type] = self.counters.get(entity_type, 0) + 1
@@ -47,7 +62,7 @@ class PIIVault:
     def redact(self, text: str) -> str:
         redacted = text
         with self._lock:
-            for entity_type, (pattern, validator) in self.PATTERNS.items():
+            for entity_type, (pattern, validator) in self.active_patterns.items():
                 for match in pattern.finditer(text):
                     val = match.group(0)
                     
