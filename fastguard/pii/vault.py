@@ -11,24 +11,22 @@ from fastguard.pii.checksums import (
 
 class PIIVault:
     PATTERNS = {
-        # Network & Contact
+        # High-specificity Identity & Banking
         "EMAIL": (re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'), None),
-        "PHONE": (re.compile(r'(?:\+\d{1,3}[-.\s]?|\b\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,9}\b'), validate_phone),
-        "IP_ADDRESS": (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), validate_ip),
-        
-        # Financial & Banking
-        "CREDIT_CARD": (re.compile(r'\b(?:\d[ -]*?){13,19}\b'), validate_luhn),
+        "UPI_ID": (re.compile(r'\b[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}(?!\.[a-zA-Z])\b'), None),
         "IBAN": (re.compile(r'\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b'), validate_iban),
-        "SWIFT_BIC": (re.compile(r'\b[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b'), None),
         "IFSC": (re.compile(r'\b[A-Z]{4}0[A-Z0-9]{6}\b'), None),
+        "SWIFT_BIC": (re.compile(r'\b[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b'), None),
         "UK_SORT_CODE": (re.compile(r'\b\d{2}-\d{2}-\d{2}\b'), None),
-        
-        # Identity Documents
         "US_SSN": (re.compile(r'\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b'), None),
         "AADHAAR": (re.compile(r'\b\d{4}\s?\d{4}\s?\d{4}\b'), validate_verhoeff),
         "PAN": (re.compile(r'\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b'), None),
-        "UPI_ID": (re.compile(r'\b[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}(?!\.[a-zA-Z])\b'), None),
         "UK_NINO": (re.compile(r'\b[A-Z]{2}\d{6}[A-D]\b'), None),
+        "IP_ADDRESS": (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), validate_ip),
+        
+        # Financial & Contact numbers
+        "CREDIT_CARD": (re.compile(r'\b(?:\d[ -]*?){13,19}\b'), validate_luhn),
+        "PHONE": (re.compile(r'(?:\+\d{1,3}[-.\s]*)?(?:\(\d{2,4}\)[-.\s]*|\b\d{1,4}[-.\s]*)(?:\d{2,4}[-.\s]*){2,5}\b'), validate_phone),
     }
 
     def __init__(

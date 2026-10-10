@@ -12,7 +12,11 @@ def validate_ip(ip_str: str) -> bool:
 
 def validate_phone(phone_str: str) -> bool:
     try:
-        parsed = phonenumbers.parse(phone_str, "US")
+        digits_only = [c for c in phone_str if c.isdigit()]
+        if len(digits_only) < 7:
+            return False
+        region = None if phone_str.strip().startswith("+") else "US"
+        parsed = phonenumbers.parse(phone_str, region)
         return phonenumbers.is_valid_number(parsed)
     except Exception:
         return False

@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.2] - 2026-10-10
+
+### Added
+- **Global Phone Coverage**: Extended international phone number validation for 240+ countries (+33, +49, +44, +91, etc.) via dynamic E.164 parsing in `validate_phone`
+- **Pattern Specificity Prioritization**: Structured banking and identity formats (IFSC, UK Sort Code, US SSN, Aadhaar, IBAN) are matched before generic number fallbacks to prevent collisions
+- **Clean Test Suite**: Streamlined core test suite in `tests/test_pii.py` with 100% pass rate
+
+---
+
+## [1.0.1] - 2026-10-10
+
+### Fixed
+- **PyPI Screenshot Rendering**: Updated README demo image paths to raw CDN URLs for proper rendering on pypi.org
+
+---
+
 ## [1.0.0] - 2026-10-10
 
 ### Added
