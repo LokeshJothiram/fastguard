@@ -52,22 +52,92 @@ pip install "fastguard[nlp]"
 ```python
 from fastguard import PIIGuard
 
+# Initialize guardrail
 guard = PIIGuard(whitelist={"localhost", "api.internal"})
 
-# Redact PII before calling LLM
+# 1. Redact PII before calling LLM
 user_prompt = "Contact Alice at alice@test.com or call +1 650 253 0000 with PAN ABCDE1234F"
 clean_prompt = guard.sanitize_prompt(user_prompt)
 
 print(clean_prompt)
 # Output: Contact Alice at [EMAIL_1] or call [PHONE_1] with PAN [PAN_1]
 
-# Wrap LLM output stream to automatically restore original values
+# 2. Wrap LLM output stream to automatically restore original values
 llm_stream = ["Response ", "for ", "[EMAIL_1]", "."]
 restored_stream = list(guard.wrap_stream(llm_stream))
 
 print("".join(restored_stream))
 # Output: Response for alice@test.com.
 ```
+
+---
+
+## ⚙️ Configuration & Advanced Options
+
+`PIIGuard` provides granular controls for every stage of the guardrail:
+
+```python
+guard = PIIGuard(
+    # Selective Entity Filtering
+    enabled_entities={"CREDIT_CARD", "EMAIL"}, # Only detect specific entity types
+    disabled_entities={"PHONE"},                 # Or disable specific entity types
+    
+    # Stage Toggles
+    redact_input=True,    # Set False to disable incoming prompt redaction
+    unmask_output=True,   # Set False to leave placeholders in output stream
+    
+    # Whitelisting & Performance
+    whitelist={"support@company.com", "192.168.1.1"}, # Safe terms never masked
+    window_size=25        # Sliding window buffer size for token streams
+)
+```
+
+### 1. Selective Entity Masking
+Target only high-risk financial identifiers or disable non-critical entities:
+
+```python
+# Only mask Credit Cards and US SSN, leave emails and phones intact
+guard = PIIGuard(enabled_entities={"CREDIT_CARD", "US_SSN"})
+clean = guard.sanitize_prompt("Email test@corp.com with card 4532 0123 4567 8910")
+# Result: "Email test@corp.com with card [CREDIT_CARD_1]"
+```
+
+### 2. Whitelisting (Static & Dynamic)
+Prevent internal IP addresses, API domains, or test accounts from being redacted:
+
+```python
+guard = PIIGuard(whitelist={"localhost", "127.0.0.1", "corp.internal"})
+
+# Add terms at runtime dynamically
+guard.add_whitelist_terms({"support@fastguard.ai", "api.staging.net"})
+```
+
+### 3. Stage Toggles (Audit / Redact-Only / Unmask-Only)
+```python
+# Leave placeholders in LLM stream without unmasking (Audit mode)
+guard = PIIGuard(unmask_output=False)
+```
+
+---
+
+## 🧩 Supported PII Entities & Validations
+
+| Entity Identifier | Category | Algorithm / Validation Standard |
+| :--- | :--- | :--- |
+| `EMAIL` | Contact | RFC 5322 Standard Email Regex |
+| `PHONE` | Contact | Google `libphonenumber` International E.164 & National |
+| `IP_ADDRESS` | Network | IPv4 0–255 Per-Octet Range Validation |
+| `CREDIT_CARD` | Financial | Luhn MOD-10 Algorithm Checksum (Visa, MC, Amex, etc.) |
+| `IBAN` | Financial | ISO 13616 / MOD-97 International Bank Account Number |
+| `SWIFT_BIC` | Financial | ISO 9362 Business Identifier Codes (8 or 11 chars) |
+| `IFSC` | Financial | Indian Financial System Code Regex |
+| `UK_SORT_CODE` | Financial | 6-digit UK Bank Sort Codes (`XX-XX-XX`) |
+| `UPI_ID` | Financial | Unified Payments Interface Virtual Payment Addresses |
+| `US_SSN` | Identity | US Social Security Number Format & Area Checks |
+| `AADHAAR` | Identity | Verhoeff Dihedral Group Checksum Algorithm |
+| `PAN` | Identity | Indian Permanent Account Number (Income Tax Dept) |
+| `UK_NINO` | Identity | UK National Insurance Number Format & HMRC Prefixes |
+
 
 ---
 
