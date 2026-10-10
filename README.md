@@ -17,10 +17,11 @@
 Test real-time PII sanitization, metric latency tracking, and reversible stream unmasking in your browser:
 
 ### 1. Interactive Sandbox Dashboard
-![fastguard Interactive Sandbox Initial State](assets/sandbox_initial.png)
+![fastguard Interactive Sandbox Initial State](https://raw.githubusercontent.com/LokeshJothiram/fastguard/main/assets/sandbox_initial.png)
 
 ### 2. Live Redaction & Reversible Vault Inspection
-![fastguard Live Sandbox Execution](assets/sandbox_demo.png)
+![fastguard Live Sandbox Execution](https://raw.githubusercontent.com/LokeshJothiram/fastguard/main/assets/sandbox_demo.png)
+
 
 ```bash
 # Launch the local visual sandbox
