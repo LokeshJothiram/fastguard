@@ -1,8 +1,14 @@
 # fastguard 🛡️
 
+[![PyPI version](https://img.shields.io/pypi/v/fastguard.svg?color=blue)](https://pypi.org/project/fastguard/)
+[![Python versions](https://img.shields.io/pypi/pyversions/fastguard.svg)](https://pypi.org/project/fastguard/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/LokeshJothiram/fastguard/blob/main/LICENSE)
+[![CI Tests](https://github.com/LokeshJothiram/fastguard/actions/workflows/ci.yml/badge.svg)](https://github.com/LokeshJothiram/fastguard/actions)
+
 **Sub-millisecond, streaming-native PII guardrail & reversible vault for LLM applications.**
 
 `fastguard` protects AI applications from PII leaks by redacting sensitive data before it reaches external LLM APIs and unmasking placeholders in real-time streaming responses.
+
 
 ---
 
