@@ -6,3 +6,9 @@ build/
 .pytest_cache/
 .DS_Store
 .gradio/
+.env
+*.env
+*.pem
+*.key
+.coverage
+htmlcov/
