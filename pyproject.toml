@@ -31,11 +31,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/LokeshJothiram/fastguard"
-Repository = "https://github.com/LokeshJothiram/fastguard"
-"Bug Tracker" = "https://github.com/LokeshJothiram/fastguard/issues"
-Contributing = "https://github.com/LokeshJothiram/fastguard/blob/main/CONTRIBUTING.md"
-Changelog = "https://github.com/LokeshJothiram/fastguard/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/lokeshjothiramdev/fastguard"
+Repository = "https://github.com/lokeshjothiramdev/fastguard"
+"Bug Tracker" = "https://github.com/lokeshjothiramdev/fastguard/issues"
+Contributing = "https://github.com/lokeshjothiramdev/fastguard/blob/main/CONTRIBUTING.md"
+Changelog = "https://github.com/lokeshjothiramdev/fastguard/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 nlp = [

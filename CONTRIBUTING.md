@@ -8,7 +8,7 @@ Thank you for your interest in contributing to **FastGuard**! We welcome contrib
 
 ### 1. Fork and Clone the Repository
 
-1. Click the **Fork** button at the top-right of [FastGuard on GitHub](https://github.com/LokeshJothiram/fastguard).
+1. Click the **Fork** button at the top-right of [FastGuard on GitHub](https://github.com/lokeshjothiramdev/fastguard).
 2. Clone your fork locally:
    ```bash
    git clone https://github.com/<your-username>/fastguard.git
@@ -62,7 +62,7 @@ python demo.py
 
 When adding a new PII entity detector (e.g. passport number, tax ID):
 
-1. **Regex & Checksum**: Add regex pattern and any algorithmic checksum validation (Luhn, Mod-97, Verhoeff, etc.) in [`fastguard/pii/checksums.py`](https://github.com/LokeshJothiram/fastguard/blob/main/fastguard/pii/checksums.py) and [`fastguard/pii/vault.py`](https://github.com/LokeshJothiram/fastguard/blob/main/fastguard/pii/vault.py).
+1. **Regex & Checksum**: Add regex pattern and any algorithmic checksum validation (Luhn, Mod-97, Verhoeff, etc.) in [`fastguard/pii/checksums.py`](https://github.com/lokeshjothiramdev/fastguard/blob/main/fastguard/pii/checksums.py) and [`fastguard/pii/vault.py`](https://github.com/lokeshjothiramdev/fastguard/blob/main/fastguard/pii/vault.py).
 2. **Type Annotations**: Ensure all functions have proper Python type hints (PEP 561 compliance).
 3. **Thread Safety**: Ensure all state mutations in `PIIVault` remain protected under `self._lock`.
 4. **Unit Tests**: Add positive, negative, and edge-case unit tests in `tests/test_pii.py`.
@@ -83,14 +83,14 @@ When adding a new PII entity detector (e.g. passport number, tax ID):
    ```bash
    git push origin feature/my-cool-feature
    ```
-4. Go to [FastGuard Pull Requests](https://github.com/LokeshJothiram/fastguard/pulls) and click **"New Pull Request"**.
+4. Go to [FastGuard Pull Requests](https://github.com/lokeshjothiramdev/fastguard/pulls) and click **"New Pull Request"**.
 5. Describe what changes you made and why.
 
 ---
 
 ## 💬 Questions or Security Reports?
 
-- **General Questions / Ideas**: Open an issue on [GitHub Issues](https://github.com/LokeshJothiram/fastguard/issues).
-- **Security Vulnerabilities**: Please review [`SECURITY.md`](https://github.com/LokeshJothiram/fastguard/blob/main/SECURITY.md) and report privately via email to `lokesh.jothiram.contact@gmail.com`.
+- **General Questions / Ideas**: Open an issue on [GitHub Issues](https://github.com/lokeshjothiramdev/fastguard/issues).
+- **Security Vulnerabilities**: Please review [`SECURITY.md`](https://github.com/lokeshjothiramdev/fastguard/blob/main/SECURITY.md) and report privately via email to `lokesh.jothiram.contact@gmail.com`.
 
 Thank you for making FastGuard faster and safer for everyone! 🛡️

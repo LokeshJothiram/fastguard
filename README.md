@@ -2,8 +2,8 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/fastguard.svg?color=blue)](https://pypi.org/project/fastguard/)
 [![Python versions](https://img.shields.io/pypi/pyversions/fastguard.svg)](https://pypi.org/project/fastguard/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/LokeshJothiram/fastguard/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/LokeshJothiram/fastguard)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/lokeshjothiramdev/fastguard/blob/main/LICENSE)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/lokeshjothiramdev/fastguard)
 
 **Sub-millisecond, streaming-native PII guardrail & reversible vault for LLM applications.**
 
@@ -17,10 +17,10 @@
 Test real-time PII sanitization, metric latency tracking, and reversible stream unmasking in your browser:
 
 ### 1. Interactive Sandbox Dashboard
-![fastguard Interactive Sandbox Initial State](https://raw.githubusercontent.com/LokeshJothiram/fastguard/main/assets/sandbox_initial.png)
+![fastguard Interactive Sandbox Initial State](https://raw.githubusercontent.com/lokeshjothiramdev/fastguard/main/assets/sandbox_initial.png)
 
 ### 2. Live Redaction & Reversible Vault Inspection
-![fastguard Live Sandbox Execution](https://raw.githubusercontent.com/LokeshJothiram/fastguard/main/assets/sandbox_demo.png)
+![fastguard Live Sandbox Execution](https://raw.githubusercontent.com/lokeshjothiramdev/fastguard/main/assets/sandbox_demo.png)
 
 
 ```bash
@@ -196,7 +196,7 @@ events = guard.get_last_audit_events()
 
 ## Contributing
 
-We welcome community contributions! Please read our [Contributing Guide](https://github.com/LokeshJothiram/fastguard/blob/main/CONTRIBUTING.md) to get started with local development, running tests, and opening Pull Requests.
+We welcome community contributions! Please read our [Contributing Guide](https://github.com/lokeshjothiramdev/fastguard/blob/main/CONTRIBUTING.md) to get started with local development, running tests, and opening Pull Requests.
 
 ---
 
