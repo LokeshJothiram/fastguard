@@ -125,14 +125,52 @@ guard.add_whitelist_terms({"support@fastguard.ai", "api.staging.net"})
 guard = PIIGuard(unmask_output=False)
 ```
 
+### 4. Work vs. Personal Email Intelligence
+Keep internal enterprise discussions intact while redacting consumer webmail accounts:
+
+```python
+guard = PIIGuard(
+    personal_email_only=True, 
+    work_domains={"mycompany.com", "partner.org"}
+)
+clean = guard.sanitize_prompt("Email alice@mycompany.com or personal bob@gmail.com")
+# Result: "Email alice@mycompany.com or personal [EMAIL_1]"
+```
+
+### 5. Dual Masking Modes (`placeholder` vs `partial`)
+Choose between 100% reversible vault tokens or shape-preserving partial masks:
+
+```python
+# Default reversible token
+guard.sanitize_prompt("Card 4532 0123 4567 8910") 
+# Output: "Card [CREDIT_CARD_1]"
+
+# Non-destructive partial mask for UI display
+guard.sanitize_prompt("Card 4532 0123 4567 8910", mask_mode="partial") 
+# Output: "Card 4532-xxxx-xxxx-8910"
+```
+
+### 6. Real-Time Audit & Telemetry Events
+Retrieve execution latency and detected entities for your governance dashboard:
+
+```python
+clean = guard.sanitize_prompt("Contact user@test.com at 192.168.1.5")
+events = guard.get_last_audit_events()
+# [
+#   {"entity": "EMAIL", "masked_value": "[EMAIL_1]", "original_length": 13, "latency_us": 14.2},
+#   {"entity": "IP_ADDRESS", "masked_value": "[IP_ADDRESS_1]", "original_length": 11, "latency_us": 22.8}
+# ]
+```
+
 ---
 
 ## 🧩 Supported PII Entities & Validations
 
 | Entity Identifier | Category | Algorithm / Validation Standard |
 | :--- | :--- | :--- |
-| `EMAIL` | Contact | RFC 5322 Standard Email Regex |
+| `EMAIL` | Contact | RFC 5322 Standard Email Regex (Personal & Work aware) |
 | `PHONE` | Contact | Google `libphonenumber` International E.164 & National |
+| `STREET_ADDRESS` | Location | Sub-millisecond Street Address Regex (Zero NLP dependency) |
 | `IP_ADDRESS` | Network | IPv4 0–255 Per-Octet Range Validation |
 | `CREDIT_CARD` | Financial | Luhn MOD-10 Algorithm Checksum (Visa, MC, Amex, etc.) |
 | `IBAN` | Financial | ISO 13616 / MOD-97 International Bank Account Number |

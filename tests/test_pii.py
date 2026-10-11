@@ -99,3 +99,47 @@ def test_selective_disabled_entities():
     assert "+1 650 253 0000" in clean
     assert "[EMAIL_1]" in clean
 
+def test_personal_vs_work_email():
+    # Only mask personal consumer email, leave corporate email intact
+    guard = PIIGuard(personal_email_only=True, work_domains={"fastguard.ai", "acme.corp"})
+    prompt = "Reach colleague at john@fastguard.ai or personal at john.doe@gmail.com"
+    clean = guard.sanitize_prompt(prompt)
+    assert "john@fastguard.ai" in clean      # Work email preserved
+    assert "john.doe@gmail.com" not in clean  # Personal email masked
+    assert "[EMAIL_1]" in clean
+
+def test_partial_masking_mode():
+    guard = PIIGuard()
+    prompt = "My card is 4532 0123 4567 8910 and email alice.smith@gmail.com"
+    partial_clean = guard.sanitize_prompt(prompt, mask_mode="partial")
+    assert "4532-xxxx-xxxx-8910" in partial_clean
+    assert "alixxxxxxx@xxxxxxx.com" in partial_clean
+    assert "[EMAIL_1]" not in partial_clean
+
+def test_label_glued_boundary():
+    guard = PIIGuard()
+    # Unspaced label attached directly to digits
+    prompt = "Here is my ssn123-45-6789 and card4532012345678910"
+    clean = guard.sanitize_prompt(prompt)
+    assert "[US_SSN_1]" in clean
+    assert "[CREDIT_CARD_1]" in clean
+    assert "123-45-6789" not in clean
+
+def test_audit_telemetry_events():
+    guard = PIIGuard()
+    prompt = "Alert user at dev@test.com with IP 192.168.1.100"
+    clean = guard.sanitize_prompt(prompt)
+    events = guard.get_last_audit_events()
+    assert len(events) == 2
+    entities = [e["entity"] for e in events]
+    assert "EMAIL" in entities
+    assert "IP_ADDRESS" in entities
+    assert all("latency_us" in e and "original_length" in e for e in events)
+
+def test_street_address_detection():
+    guard = PIIGuard()
+    prompt = "The package was shipped to 742 Evergreen Terrace, Apt 4B yesterday."
+    clean = guard.sanitize_prompt(prompt)
+    assert "[STREET_ADDRESS_1]" in clean
+    assert "742 Evergreen Terrace, Apt 4B" not in clean
+

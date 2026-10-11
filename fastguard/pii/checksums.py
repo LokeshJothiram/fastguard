@@ -71,3 +71,79 @@ def validate_iban(iban: str) -> bool:
         return int(numeric_iban) % 97 == 1
     except ValueError:
         return False
+
+# ---------------------------------------------------------------------------
+# Consumer Email Domains & Personal vs. Work Detection
+# ---------------------------------------------------------------------------
+
+CONSUMER_EMAIL_DOMAINS = {
+    "gmail.com", "googlemail.com", "yahoo.com", "yahoo.co.uk", "yahoo.co.in",
+    "hotmail.com", "hotmail.co.uk", "outlook.com", "live.com", "msn.com",
+    "aol.com", "icloud.com", "me.com", "mac.com", "proton.me", "protonmail.com",
+    "gmx.com", "gmx.net", "mail.com", "yandex.com", "yandex.ru", "zoho.com",
+    "rediffmail.com", "qq.com", "163.com", "126.com", "naver.com"
+}
+
+def is_personal_email(email_str: str, work_domains: set = None) -> bool:
+    """Determines whether an email address is a personal consumer email vs a corporate address.
+    If work_domains is specified, any domain matching work_domains is treated as corporate (non-personal).
+    Otherwise, addresses on known public consumer webmail domains are treated as personal.
+    """
+    domain = email_str.rpartition("@")[2].strip().lower()
+    if not domain or "." not in domain:
+        return False
+    if work_domains:
+        normalized_work = {d.lower().lstrip("@") for d in work_domains}
+        return domain not in normalized_work
+    return domain in CONSUMER_EMAIL_DOMAINS
+
+
+# ---------------------------------------------------------------------------
+# Partial Masking Logic (Audit logs & non-destructive UI display)
+# ---------------------------------------------------------------------------
+
+def mask_pii_value(val: str, entity_type: str = "GENERIC") -> str:
+    """Produces a shape-preserving, partial-masked representation of sensitive PII.
+    Useful for audit logs, reporting cards, and visual verification.
+    """
+    if not val:
+        return val
+    
+    if entity_type == "EMAIL" and "@" in val:
+        local, _, domain = val.partition("@")
+        keep = min(3, max(1, len(local) // 2))
+        tld = domain.rsplit(".", 1)[-1] if "." in domain else "com"
+        return f"{local[:keep]}xxxxxxx@xxxxxxx.{tld}"
+        
+    if entity_type == "CREDIT_CARD":
+        digits = [c for c in val if c.isdigit()]
+        if len(digits) >= 12:
+            return f"{''.join(digits[:4])}-xxxx-xxxx-{''.join(digits[-4:])}"
+            
+    if entity_type == "US_SSN":
+        clean_ssn = val.replace("-", "").strip()
+        if len(clean_ssn) == 9:
+            return f"xxx-xx-{clean_ssn[-4:]}"
+            
+    if entity_type == "PHONE":
+        digits = [c for c in val if c.isdigit()]
+        if len(digits) >= 7:
+            return f"{''.join(digits[:3])}-xxxx-{''.join(digits[-2:])}"
+            
+    if entity_type == "STREET_ADDRESS":
+        parts = val.split(maxsplit=1)
+        if len(parts) == 2 and parts[0].isdigit():
+            return f"xxx {parts[1]}"
+
+    # Generic partial fallback
+    keep = min(3, max(1, len(val) // 3))
+    return f"{val[:keep]}xxxxxxx{val[-keep:] if len(val) > keep * 2 else ''}"
+
+
+def validate_street_address(address_str: str) -> bool:
+    """Validates that a candidate street address has a digit prefix and recognizable street term."""
+    s = address_str.strip()
+    if not s or len(s) < 6:
+        return False
+    parts = s.split()
+    return bool(parts and parts[0][0].isdigit())

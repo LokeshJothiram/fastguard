@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.5] - 2026-10-11
+
+### Added
+- **Work vs. Personal Email Intelligence**: Added `personal_email_only=True` and `work_domains` to preserve internal corporate correspondence while masking consumer emails (`gmail.com`, `yahoo.com`, etc.)
+- **Dual Masking Modes**: Added `mask_mode="partial"` option alongside default reversible `"placeholder"` for audit logging and UI display (e.g. `4532-xxxx-xxxx-8910`, `alixxxxxxx@xxxxxxx.com`)
+- **Label-Glued Word Boundary Shield**: Upgraded numerical patterns with lookaround boundaries (`(?<!\d)` / `(?!\d)`) to catch unspaced labels like `ssn123-45-6789` and `card4532...`
+- **Audit & Telemetry Inspector**: Added `guard.get_last_audit_events()` and `vault.get_last_audit_events()` returning execution latency ($\mu\text{s}$), entity names, positions, and lengths
+- **Lightweight Street Address Detection**: Added sub-millisecond regex detector for physical addresses (`STREET_ADDRESS`) without requiring heavy NLP dependencies
+
+---
+
 ## [1.0.4] - 2026-10-11
 
 ### Fixed

@@ -1,12 +1,16 @@
 import re
+import time
 import threading
-from typing import Set, Optional
+from typing import Set, Optional, List, Dict, Any
 from fastguard.pii.checksums import (
     validate_luhn, 
     validate_verhoeff, 
     validate_phone, 
     validate_iban,
-    validate_ip
+    validate_ip,
+    validate_street_address,
+    is_personal_email,
+    mask_pii_value
 )
 
 class PIIVault:
@@ -18,14 +22,24 @@ class PIIVault:
         "IFSC": (re.compile(r'\b[A-Z]{4}0[A-Z0-9]{6}\b'), None),
         "SWIFT_BIC": (re.compile(r'\b[A-Z]{6}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b'), None),
         "UK_SORT_CODE": (re.compile(r'\b\d{2}-\d{2}-\d{2}\b'), None),
-        "US_SSN": (re.compile(r'\b(?!000|666|9\d{2})\d{3}-(?!00)\d{2}-(?!0000)\d{4}\b'), None),
+        # Label-glued lookaround boundary for SSN (e.g., ssn987-65-4321)
+        "US_SSN": (re.compile(r'(?<!\d)(?!000|666|9\d{2})\d{3}[- ]?(?!00)\d{2}[- ]?(?!0000)\d{4}(?!\d)'), None),
         "AADHAAR": (re.compile(r'\b\d{4}\s?\d{4}\s?\d{4}\b'), validate_verhoeff),
         "PAN": (re.compile(r'\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b'), None),
         "UK_NINO": (re.compile(r'\b[A-Z]{2}\d{6}[A-D]\b'), None),
         "IP_ADDRESS": (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), validate_ip),
         
-        # Financial & Contact numbers
-        "CREDIT_CARD": (re.compile(r'\b(?:\d[ -]*?){13,19}\b'), validate_luhn),
+        # Physical Street Address (Regex-only, sub-millisecond, zero NLP dependency)
+        "STREET_ADDRESS": (
+            re.compile(
+                r'\b\d{1,5}\s+[A-Za-z0-9\.\s]{2,30}?\s+(?:Street|St|Avenue|Ave|Boulevard|Blvd|Road|Rd|Drive|Dr|Lane|Ln|Way|Court|Ct|Circle|Cir|Terrace|Ter|Place|Pl|Highway|Hwy|Suite|Ste|Apt|Unit|Floor|Fl)\b(?:\s+(?:Apt|Suite|Ste|Unit|#)\s*[A-Za-z0-9\-]+)?',
+                re.IGNORECASE
+            ),
+            validate_street_address
+        ),
+        
+        # Financial & Contact numbers (Lookaround boundary catches card4532015012345678)
+        "CREDIT_CARD": (re.compile(r'(?<!\d)(?:\d[ -]*?){13,19}(?!\d)'), validate_luhn),
         "PHONE": (re.compile(r'(?:\+\d{1,3}[-.\s]*)?(?:\(\d{2,4}\)[-.\s]*|\b\d{1,4}[-.\s]*)(?:\d{2,4}[-.\s]*){2,5}\b'), validate_phone),
     }
 
@@ -33,7 +47,10 @@ class PIIVault:
         self, 
         whitelist: Optional[Set[str]] = None,
         enabled_entities: Optional[Set[str]] = None,
-        disabled_entities: Optional[Set[str]] = None
+        disabled_entities: Optional[Set[str]] = None,
+        personal_email_only: bool = False,
+        work_domains: Optional[Set[str]] = None,
+        mask_mode: str = "placeholder"
     ):
         self.forward_map: dict = {}
         self.reverse_map: dict = {}
@@ -42,6 +59,12 @@ class PIIVault:
         self.whitelist: Set[str] = set(whitelist) if whitelist else {"localhost", "127.0.0.1", "0.0.0.0"}
         # Thread-safety lock for concurrent request environments (FastAPI, Django, etc.)
         self._lock = threading.RLock()
+        
+        # Enterprise policy options
+        self.personal_email_only = personal_email_only
+        self.work_domains = work_domains
+        self.mask_mode = mask_mode.lower()
+        self.last_audit_events: List[Dict[str, Any]] = []
         
         # Filter active pattern detectors
         active = dict(self.PATTERNS)
@@ -57,8 +80,12 @@ class PIIVault:
         self.counters[entity_type] = self.counters.get(entity_type, 0) + 1
         return f"[{entity_type}_{self.counters[entity_type]}]"
 
-    def redact(self, text: str) -> str:
+    def redact(self, text: str, mask_mode: Optional[str] = None) -> str:
+        start_time = time.perf_counter()
+        effective_mode = (mask_mode or self.mask_mode).lower()
         redacted = text
+        events: List[Dict[str, Any]] = []
+        
         with self._lock:
             for entity_type, (pattern, validator) in self.active_patterns.items():
                 for match in pattern.finditer(text):
@@ -68,16 +95,39 @@ class PIIVault:
                     if val.lower() in self.whitelist:
                         continue
                     
+                    # Personal email only policy
+                    if entity_type == "EMAIL" and self.personal_email_only:
+                        if not is_personal_email(val, self.work_domains):
+                            continue
+                    
                     # Run validator if present
                     if validator and not validator(val):
                         continue
 
-                    if val not in self.forward_map:
-                        placeholder = self._get_placeholder(entity_type)
-                        self.forward_map[val] = placeholder
-                        self.reverse_map[placeholder] = val
+                    if effective_mode == "partial":
+                        replacement = mask_pii_value(val, entity_type)
+                        self.forward_map[val] = replacement
+                        self.reverse_map[replacement] = val
+                    else:
+                        if val not in self.forward_map:
+                            placeholder = self._get_placeholder(entity_type)
+                            self.forward_map[val] = placeholder
+                            self.reverse_map[placeholder] = val
+                        replacement = self.forward_map[val]
+
+                    events.append({
+                        "entity": entity_type,
+                        "original_value": val,
+                        "masked_value": replacement,
+                        "original_length": len(val),
+                        "start": match.start(),
+                        "end": match.end(),
+                        "latency_us": round((time.perf_counter() - start_time) * 1_000_000, 2)
+                    })
                     
-                    redacted = redacted.replace(val, self.forward_map[val])
+                    redacted = redacted.replace(val, replacement)
+
+            self.last_audit_events = events
         return redacted
 
     def unmask(self, text: str) -> str:
@@ -86,3 +136,8 @@ class PIIVault:
             for placeholder, val in self.reverse_map.items():
                 unmasked = unmasked.replace(placeholder, val)
         return unmasked
+
+    def get_last_audit_events(self) -> List[Dict[str, Any]]:
+        """Returns structured audit telemetry events from the most recent redaction run."""
+        with self._lock:
+            return list(self.last_audit_events)
