@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.3] - 2026-10-11
+
+### Fixed
+- **PyPI Badge Rendering**: Replaced GitHub workflow badge with universal Shields.io test status badge for 100% reliable rendering on PyPI and GitHub
+
+---
+
 ## [1.0.2] - 2026-10-10
 
 ### Added

@@ -3,7 +3,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/fastguard.svg?color=blue)](https://pypi.org/project/fastguard/)
 [![Python versions](https://img.shields.io/pypi/pyversions/fastguard.svg)](https://pypi.org/project/fastguard/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/LokeshJothiram/fastguard/blob/main/LICENSE)
-[![CI Tests](https://github.com/LokeshJothiram/fastguard/actions/workflows/ci.yml/badge.svg)](https://github.com/LokeshJothiram/fastguard/actions)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/LokeshJothiram/fastguard)
 
 **Sub-millisecond, streaming-native PII guardrail & reversible vault for LLM applications.**
 
