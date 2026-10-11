@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.4] - 2026-10-11
+
+### Fixed
+- **PyPI Contributing Link**: Converted relative `CONTRIBUTING.md` link to absolute GitHub URL to resolve PyPI 404 page routing
+- **Project Metadata URLs**: Added direct Contributing Guide URL in `pyproject.toml` metadata
+
+---
+
 ## [1.0.3] - 2026-10-11
 
 ### Fixed

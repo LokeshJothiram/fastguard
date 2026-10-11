@@ -158,7 +158,7 @@ guard = PIIGuard(unmask_output=False)
 
 ## Contributing
 
-We welcome community contributions! Please read our [Contributing Guide](CONTRIBUTING.md) to get started with local development, running tests, and opening Pull Requests.
+We welcome community contributions! Please read our [Contributing Guide](https://github.com/LokeshJothiram/fastguard/blob/main/CONTRIBUTING.md) to get started with local development, running tests, and opening Pull Requests.
 
 ---
 
