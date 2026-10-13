@@ -1,13 +1,12 @@
+import ipaddress
 import phonenumbers
 
 def validate_ip(ip_str: str) -> bool:
-    """Validates IPv4 addresses - each octet must be 0-255."""
-    parts = ip_str.split(".")
-    if len(parts) != 4:
-        return False
+    """Validates IPv4 and IPv6 addresses."""
     try:
-        return all(0 <= int(p) <= 255 for p in parts)
-    except ValueError:
+        ipaddress.ip_address(ip_str.strip())
+        return True
+    except (ValueError, AttributeError):
         return False
 
 def validate_phone(phone_str: str) -> bool:

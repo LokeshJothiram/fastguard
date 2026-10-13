@@ -143,3 +143,60 @@ def test_street_address_detection():
     assert "[STREET_ADDRESS_1]" in clean
     assert "742 Evergreen Terrace, Apt 4B" not in clean
 
+def test_ipv6_detection_and_whitelist():
+    guard = PIIGuard()
+    # ::1 should be whitelisted by default, 2001:db8::1 and fe80::1 should be masked
+    prompt = "Connect loopback ::1 or remote 2001:0db8:85a3:0000:0000:8a2e:0370:7334 or fe80::1 at 12:30:45"
+    clean = guard.sanitize_prompt(prompt)
+    assert "::1" in clean
+    assert "12:30:45" in clean  # Timestamps are not masked as IP
+    assert "[IP_ADDRESS_1]" in clean
+    assert "[IP_ADDRESS_2]" in clean
+    assert "2001:0db8:85a3:0000:0000:8a2e:0370:7334" not in clean
+    assert "fe80::1" not in clean
+
+def test_developer_secrets_detection():
+    guard = PIIGuard()
+    aws_key = "AKIAIOSFODNN7EXAMPLE"
+    gh_pat = "ghp_123456789012345678901234567890123456"
+    openai_key = "sk-proj-" + "a" * 50
+    bearer_token = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.t-IDcSemACt8x4iTMCda8Yhe3iZaWbvV5XKSTbuAn0M"
+    private_key = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA0...\n-----END RSA PRIVATE KEY-----"
+    
+    prompt = (
+        f"Config secrets: aws={aws_key}, token={gh_pat}, ai={openai_key}, "
+        f"auth={bearer_token}, key=\n{private_key}"
+    )
+    clean = guard.sanitize_prompt(prompt)
+    
+    assert "[AWS_KEY_1]" in clean
+    assert "[GITHUB_TOKEN_1]" in clean
+    assert "[OPENAI_KEY_1]" in clean
+    assert "[BEARER_TOKEN_1]" in clean
+    assert "[PRIVATE_KEY_1]" in clean
+    
+    assert aws_key not in clean
+    assert gh_pat not in clean
+    assert openai_key not in clean
+    assert bearer_token not in clean
+    assert private_key not in clean
+
+def test_span_offset_duplicate_pii_collision_free():
+    guard = PIIGuard()
+    prompt = "Reach alice@test.com today, and please CC alice@test.com again."
+    clean = guard.sanitize_prompt(prompt)
+    assert clean == "Reach [EMAIL_1] today, and please CC [EMAIL_1] again."
+    assert "alice@test.com" not in clean
+
+def test_dynamic_sliding_window_safety_tail():
+    guard = PIIGuard()
+    prompt = "Our headquarters is at 742 Evergreen Terrace, Apt 4B"
+    clean = guard.sanitize_prompt(prompt)
+    assert "[STREET_ADDRESS_1]" in clean
+    
+    # Stream in fragmented small chunks through the dynamic tail buffer
+    stream_input = ["Headquarters ", "is ", "at ", "[STRE", "ET_AD", "DRESS_1]", "."]
+    restored = "".join(list(guard.wrap_stream(stream_input)))
+    assert "Headquarters is at 742 Evergreen Terrace." in restored
+
+

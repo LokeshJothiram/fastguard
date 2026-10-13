@@ -171,7 +171,12 @@ events = guard.get_last_audit_events()
 | `EMAIL` | Contact | RFC 5322 Standard Email Regex (Personal & Work aware) |
 | `PHONE` | Contact | Google `libphonenumber` International E.164 & National |
 | `STREET_ADDRESS` | Location | Sub-millisecond Street Address Regex (Zero NLP dependency) |
-| `IP_ADDRESS` | Network | IPv4 0–255 Per-Octet Range Validation |
+| `IP_ADDRESS` | Network | IPv4 (0–255 Octets) & IPv6 (Full / Compressed) Validation |
+| `AWS_KEY` | Secrets | Amazon Web Services Access Key (`AKIA...`) Format |
+| `GITHUB_TOKEN` | Secrets | GitHub Personal Access Tokens (`ghp_` & `github_pat_`) |
+| `OPENAI_KEY` | Secrets | OpenAI & Anthropic Project API Keys (`sk-proj-...`) |
+| `BEARER_TOKEN` | Secrets | HTTP Authorization Bearer Auth Tokens |
+| `PRIVATE_KEY` | Secrets | RSA & SSH Private Key PEM Headers and Key Blocks |
 | `CREDIT_CARD` | Financial | Luhn MOD-10 Algorithm Checksum (Visa, MC, Amex, etc.) |
 | `IBAN` | Financial | ISO 13616 / MOD-97 International Bank Account Number |
 | `SWIFT_BIC` | Financial | ISO 9362 Business Identifier Codes (8 or 11 chars) |
