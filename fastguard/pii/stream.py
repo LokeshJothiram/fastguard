@@ -25,10 +25,11 @@ class StreamingGuardrail:
                 if placeholder in buffer:
                     buffer = buffer.replace(placeholder, original)
 
-            # 2. Yield processed content when buffer exceeds window_size
-            if len(buffer) >= self.window_size:
-                # Keep a 20-char safety tail to cover longest possible placeholder [CREDIT_CARD_1] = 14 chars
-                yield_len = max(1, len(buffer) - 20)
+            # 2. Yield processed content when buffer exceeds dynamic window size
+            safety_tail = max(20, *(len(p) for p in self.vault.reverse_map)) if self.vault.reverse_map else 20
+            effective_window = max(self.window_size, safety_tail + 5)
+            if len(buffer) >= effective_window:
+                yield_len = max(1, len(buffer) - safety_tail)
                 yield buffer[:yield_len]
                 buffer = buffer[yield_len:]
 

@@ -27,7 +27,24 @@ class PIIVault:
         "AADHAAR": (re.compile(r'\b\d{4}\s?\d{4}\s?\d{4}\b'), validate_verhoeff),
         "PAN": (re.compile(r'\b[A-Z]{5}[0-9]{4}[A-Z]{1}\b'), None),
         "UK_NINO": (re.compile(r'\b[A-Z]{2}\d{6}[A-D]\b'), None),
-        "IP_ADDRESS": (re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'), validate_ip),
+        "IP_ADDRESS": (
+            re.compile(
+                r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b|'
+                r'(?<![:\w])(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}(?![:\w])|'
+                r'(?<![:\w])(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}(?![:\w])|'
+                r'(?<![:\w])(?:[0-9a-fA-F]{1,4}:){1,7}:(?![:\w])|'
+                r'(?<![:\w])::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}(?![:\w])|'
+                r'(?<![:\w])::(?![:\w])'
+            ),
+            validate_ip
+        ),
+        
+        # Developer Secrets & Cloud Credentials (Roadmap v1.1.0)
+        "AWS_KEY": (re.compile(r'\bAKIA[0-9A-Z]{16}\b'), None),
+        "GITHUB_TOKEN": (re.compile(r'\b(?:ghp_[A-Za-z0-9_]{36}|github_pat_[A-Za-z0-9_]{82})\b'), None),
+        "OPENAI_KEY": (re.compile(r'\bsk-proj-[A-Za-z0-9_-]{48,}\b'), None),
+        "BEARER_TOKEN": (re.compile(r'\bBearer\s+[A-Za-z0-9\-\._~\+\/]+=*\b'), None),
+        "PRIVATE_KEY": (re.compile(r'-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]*?-----END (?:RSA )?PRIVATE KEY-----|-----BEGIN (?:RSA )?PRIVATE KEY-----'), None),
         
         # Physical Street Address (Regex-only, sub-millisecond, zero NLP dependency)
         "STREET_ADDRESS": (
@@ -56,7 +73,7 @@ class PIIVault:
         self.reverse_map: dict = {}
         self.counters: dict = {}
         # Default safe terms that should never be masked
-        self.whitelist: Set[str] = set(whitelist) if whitelist else {"localhost", "127.0.0.1", "0.0.0.0"}
+        self.whitelist: Set[str] = set(whitelist) if whitelist else {"localhost", "127.0.0.1", "0.0.0.0", "::1"}
         # Thread-safety lock for concurrent request environments (FastAPI, Django, etc.)
         self._lock = threading.RLock()
         
@@ -87,6 +104,8 @@ class PIIVault:
         events: List[Dict[str, Any]] = []
         
         with self._lock:
+            # 1. Collect all valid candidate matches across active patterns
+            candidates = []
             for entity_type, (pattern, validator) in self.active_patterns.items():
                 for match in pattern.finditer(text):
                     val = match.group(0)
@@ -104,28 +123,47 @@ class PIIVault:
                     if validator and not validator(val):
                         continue
 
-                    if effective_mode == "partial":
-                        replacement = mask_pii_value(val, entity_type)
-                        self.forward_map[val] = replacement
-                        self.reverse_map[replacement] = val
-                    else:
-                        if val not in self.forward_map:
-                            placeholder = self._get_placeholder(entity_type)
-                            self.forward_map[val] = placeholder
-                            self.reverse_map[placeholder] = val
-                        replacement = self.forward_map[val]
+                    candidates.append((match.start(), match.end(), entity_type, val))
 
-                    events.append({
-                        "entity": entity_type,
-                        "original_value": val,
-                        "masked_value": replacement,
-                        "original_length": len(val),
-                        "start": match.start(),
-                        "end": match.end(),
-                        "latency_us": round((time.perf_counter() - start_time) * 1_000_000, 2)
-                    })
-                    
-                    redacted = redacted.replace(val, replacement)
+            # 2. Filter overlapping spans: prioritize earliest start offset, then longest match
+            candidates.sort(key=lambda m: (m[0], -(m[1] - m[0])))
+            non_overlapping = []
+            current_end = -1
+            for m in candidates:
+                start, end, entity_type, val = m
+                if start >= current_end:
+                    non_overlapping.append(m)
+                    current_end = end
+
+            # 3. Assign replacements and record audit telemetry in text order
+            replacements = []
+            for start, end, entity_type, val in non_overlapping:
+                if effective_mode == "partial":
+                    replacement = mask_pii_value(val, entity_type)
+                    self.forward_map[val] = replacement
+                    self.reverse_map[replacement] = val
+                else:
+                    if val not in self.forward_map:
+                        placeholder = self._get_placeholder(entity_type)
+                        self.forward_map[val] = placeholder
+                        self.reverse_map[placeholder] = val
+                    replacement = self.forward_map[val]
+
+                events.append({
+                    "entity": entity_type,
+                    "original_value": val,
+                    "masked_value": replacement,
+                    "original_length": len(val),
+                    "start": start,
+                    "end": end,
+                    "latency_us": round((time.perf_counter() - start_time) * 1_000_000, 2)
+                })
+
+                replacements.append((start, end, replacement))
+
+            # 4. Perform character offset span replacement slicing from right-to-left
+            for start, end, replacement in sorted(replacements, key=lambda x: x[0], reverse=True):
+                redacted = redacted[:start] + replacement + redacted[end:]
 
             self.last_audit_events = events
         return redacted

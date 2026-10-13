@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-10-13
+
+### Added
+- **Developer Secrets & Cloud Credential Detection**: High-accuracy, sub-millisecond detection and reversible masking for `AWS_KEY` (`AKIA...`), `GITHUB_TOKEN` (`ghp_...` and fine-grained `github_pat_...`), `OPENAI_KEY` (`sk-proj-...`), `BEARER_TOKEN`, and `PRIVATE_KEY` (RSA/SSH headers and key blocks).
+- **Comprehensive IPv6 Network Support**: Upgraded IP validator to use standard library `ipaddress` for full and compressed IPv6 addresses (`2001:0db8::1`, `fe80::1`) while automatically whitelisting IPv6 loopback (`::1`).
+- **Dynamic Sliding-Window Safety Tail**: `StreamingGuardrail` now computes buffer safety tail dynamically based on active vault placeholders (`max(len(p) for p in reverse_map)`), eliminating truncation risk for long placeholder tokens.
+
+### Changed
+- **Span / Offset-Based Redaction Engine**: Migrated from naive `str.replace` substring substitution to exact character span offset replacements slicing right-to-left (`match.start()` and `match.end()`), preventing accidental substring collisions when identical tokens repeat in a single prompt.
+
 ---
 
 ## [1.0.5] - 2026-10-11
